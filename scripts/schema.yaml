@@ -1,0 +1,90 @@
+# schema.yaml — ServiceNow table configuration and AI generation settings.
+#
+# Used by:
+#   analyze_doc.py  — drives the AI prompt and output structure
+#   create_stories.py — maps stories.json fields to ServiceNow API payloads
+#
+# The defaults here target ServiceNow Agile 2.0 (rm_epic / rm_story).
+# To use custom tables or fields, update the values below — no code changes needed.
+
+# ---------------------------------------------------------------------------
+# Target tables
+# ---------------------------------------------------------------------------
+tables:
+  epic:
+    name: rm_epic
+    fields:
+      - name: short_description
+        required: true
+        description: "Short title for the epic (aim for 50–80 characters)"
+      - name: description
+        required: false
+        description: "One-paragraph summary of what this epic covers and why"
+      - name: state
+        default: "open"
+
+  story:
+    name: rm_story
+    fields:
+      - name: short_description
+        required: true
+        description: "Short title for the story (aim for 50–80 characters)"
+      - name: description
+        required: false
+        description: "Full story text: reference ID, tags, user story sentence, current state"
+      - name: acceptance_criteria
+        required: false
+        format: html_list   # list of strings in stories.json → <ul><li>…</li></ul> in ServiceNow
+        description: "5–8 specific, testable acceptance criteria"
+      - name: priority
+        required: true
+        mapping: priorities  # string key in stories.json → numeric value via the priorities section below
+        description: "Story priority: critical | high | moderate"
+      - name: state
+        default: "open"
+
+# ---------------------------------------------------------------------------
+# Priority definitions
+# 'value' is what gets sent to ServiceNow; 'label' is shown in script output.
+# 'guidance' is injected into the AI prompt to steer priority assignment.
+# ---------------------------------------------------------------------------
+priorities:
+  critical:
+    value: "1"
+    label: "P0 Critical"
+    guidance: "Broken functionality, must-have for launch, blocking issues"
+  high:
+    value: "2"
+    label: "P1 High"
+    guidance: "Significant improvement, high user value, important but not blocking"
+  moderate:
+    value: "3"
+    label: "P2 Moderate"
+    guidance: "Nice-to-have, quality of life, non-urgent enhancement"
+
+# ---------------------------------------------------------------------------
+# AI generation instructions
+# These are injected verbatim into the analyze_doc.py prompt.
+# Adjust them to influence how the AI interprets your documents.
+# ---------------------------------------------------------------------------
+ai:
+  instructions:
+    grouping: >
+      Group related gaps or features into 3–7 logical epics. Each epic should represent
+      a coherent theme or product area (e.g. "Admin & Event Management", "Judging Experience").
+      Give each epic a short snake_case key (e.g. admin_event_management).
+    story_format: >
+      Write each user story as: "As a <role>, I want <goal> so that <benefit>."
+    description_format: >
+      Each story description should include, in this order:
+      (1) A reference ID if one exists in the source document (e.g. "Gap ID: A-1 | Tags: [GAP] [NET-NEW]")
+      (2) The user story sentence
+      (3) A "Current state:" line summarising what exists today
+    acceptance_criteria: >
+      Provide 5–8 specific, testable acceptance criteria per story as plain text strings.
+      The script will wrap them in HTML automatically — do not add any HTML or markdown.
+    priority_guidance: >
+      Assign priority based on impact and urgency:
+      - critical: broken or missing functionality that blocks the core use case
+      - high: significant value improvement or important missing feature
+      - moderate: nice-to-have, polish, non-urgent enhancement
