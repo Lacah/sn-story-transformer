@@ -20,8 +20,6 @@ tables:
       - name: description
         required: false
         description: "One-paragraph summary of what this epic covers and why"
-      - name: state
-        default: "open"
 
   story:
     name: rm_story
@@ -30,18 +28,17 @@ tables:
         required: true
         description: "Short title for the story (aim for 50–80 characters)"
       - name: description
-        required: false
+        required: true
         description: "Full story text: reference ID, tags, user story sentence, current state"
       - name: acceptance_criteria
-        required: false
+        required: true
         format: html_list   # list of strings in stories.json → <ul><li>…</li></ul> in ServiceNow
         description: "5–8 specific, testable acceptance criteria"
       - name: priority
-        required: true
+        required: false
         mapping: priorities  # string key in stories.json → numeric value via the priorities section below
         description: "Story priority: critical | high | moderate"
-      - name: state
-        default: "open"
+
 
 # ---------------------------------------------------------------------------
 # Priority definitions
